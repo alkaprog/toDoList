@@ -17,8 +17,9 @@
     <body>
         <header>
             <nav class="navbar navbar-light bg-light">
-                <div class="container">
-                    <a class="navbar-brand">Дата</a>
+                <div class="container ">
+                    <div class="day-name fs-3 ml-0"></div>
+                    <div class="current-date fs-5 ml-0"></div>
                     <form class="d-flex">
                         <input
                             class="form-control me-2"
@@ -34,65 +35,30 @@
             </nav>
         </header>
         <section>
+            <div class="text-center my-1">To-do list for today</div>
             <ul class="list-group container mt-3">
-                <li class="list-group-item">
-                    An item
-                    <div
-                        class="position-absolute top-0 end-0 note-edit-buttons"
-                    >
-                        <button
-                            class="btn btn btn-outline-danger delete-note-btn"
-                            type="submit"
-                        >
-                            Delete
-                        </button>
-                        <button class="btn btn-outline-secondary" type="submit">
-                            Edit
-                        </button>
-                        <button class="btn btn-outline-success  done-button" type="submit">
-                            Done
-                        </button>
-                    </div>
-                </li>
-                <li class="list-group-item list-group-item-success">
-                    A second item
-                    <div
-                        class="position-absolute top-0 end-0 note-edit-buttons"
-                    >
-                        <button
-                            class="btn btn btn-outline-danger delete-note-btn"
-                            type="submit"
-                        >
-                            Delete
-                        </button>
-                        <button class="btn btn-outline-secondary" type="submit">
-                            Edit
-                        </button>
-                        <button class="btn btn-outline-success done-button" type="submit">
-                            Done
-                        </button>
-                    </div>
-                </li>
-                <li class="list-group-item">
-                    A third item
-                    <div
-                        class="position-absolute top-0 end-0 note-edit-buttons"
-                    >
-                        <button
-                            class="btn btn btn-outline-danger delete-note-btn"
-                            type="submit"
-                        >
-                            Delete
-                        </button>
-                        <button class="btn btn-outline-secondary" type="submit">
-                            Edit
-                        </button>
-                        <button class="btn btn-outline-success done-button" type="submit">
-                            Done
-                        </button>
-                    </div>
-                </li>
+                
             </ul>
+            <div class="container mt-3 d-flex justify-content-center">
+                <div class="input-group mb-3">
+                    <div class="row ">
+                        <input
+                            type="text"
+                            class="form-control add-note-input"
+                            placeholder="New note"
+                            aria-label="New note"
+                            aria-describedby="add-note-btn"
+                        />
+                        <button
+                            class="btn btn-outline-secondary "
+                            type="button"
+                            id="add-note-btn""
+                        >
+                            Post
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
     </body>
 </html>
