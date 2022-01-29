@@ -42,6 +42,15 @@ function init() {
 
     document.querySelector(".list-group").addEventListener("click", (event) => {
         if (event.target.classList.contains("delete-note-btn")) {
+            try {
+                deleteNoteFromLocalStorage(
+                    getSelectedDate(),
+                    event.target.parentElement.parentElement.id
+                );
+            } catch (err) {
+                console.log("Ошибка! Возможно вы очистили Local Storage");
+            }
+
             event.target.parentElement.parentElement.remove();
         }
     });
@@ -66,6 +75,7 @@ function init() {
             );
         }
     });
+
     setDateAndTime();
     postNotesFromLocalStorage();
 }
@@ -90,25 +100,25 @@ function getTextFromNote(innerHTMLCode) {
 
 function postNotesFromLocalStorage() {
     let notes = getNoteListForToday();
-    //console.log(notes);
-    let noteList = document.querySelector(".list-group");
+    if (notes !== null) {
+        //console.log(notes);
+        let noteList = document.querySelector(".list-group");
 
-    notes.forEach((note) => {
-        //console.log(note);
-        let newNote = createNewNote(
-            note.text,
-            note.creationTime,
-            note.completed
-        );
-        noteList.insertAdjacentHTML("beforeend", newNote);
-    });
+        notes.forEach((note) => {
+            //console.log(note);
+            let newNote = createNewNote(
+                note.text,
+                note.creationTime,
+                note.completed
+            );
+            noteList.insertAdjacentHTML("beforeend", newNote);
+        });
+    }
 }
-
 //допилить,чтобы можно было менять текущую дату и соответсвенно список дел
 function getSelectedDate() {
     return getTodayFormatedDate();
 }
-
 //добавить listener, чтобы дата менялась в 00 00
 function getCurrentDayName() {
     let day = new Date().getDay();
@@ -122,8 +132,10 @@ function getCurrentDayName() {
         case 3:
             return "Wednesday";
         case 4:
-            return "Friday";
+            return "Thursday";
         case 5:
+            return "Friday";
+        case 6:
             return "Saturday";
         default:
             return "Error";
@@ -232,12 +244,16 @@ function indexOfNoteByCreationTime(listOfNotes, creationTime) {
     return -1;
 }
 
+function deleteNoteFromLocalStorage(date, creationTime) {
+    let notes = JSON.parse(localStorage.getItem(date));
+    notes.splice(indexOfNoteByCreationTime(notes, creationTime), 1);
+    localStorage.setItem(date, JSON.stringify(notes));
+}
+
 function updateNote(listOfNotes, index, updatedNote) {
-    console.log("Old version " + listOfNotes[index]);
     listOfNotes[index].creationTime = updatedNote.creationTime;
     listOfNotes[index].text = updatedNote.text;
     listOfNotes[index].completed = updatedNote.completed;
-    console.log("Old version " + listOfNotes[index]);
     return listOfNotes;
 }
 
