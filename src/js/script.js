@@ -33,7 +33,7 @@ function init() {
                 notes.insertAdjacentHTML("beforeend", newNote);
                 saveNoteToLocalStorage(
                     inpuitField.value,
-                    getTodayFormatedDate(),
+                    getSelectedDate(),
                     creationTime
                 );
                 inpuitField.value = "";
@@ -76,8 +76,65 @@ function init() {
         }
     });
 
-    setDateAndTime();
-    postNotesFromLocalStorage();
+    document
+        .querySelector(".previous-date")
+        .addEventListener("click", (event) => {
+            setSelectedDate(getPreviousDate());
+            postNotesFromLocalStorage(getSelectedDate());
+        });
+
+    document.querySelector(".next-date").addEventListener("click", (event) => {
+        setSelectedDate(getNextDate());
+        postNotesFromLocalStorage(getSelectedDate());
+    });
+
+    displayTodayDate();
+    setSelectedDate(new Date());
+    postNotesFromLocalStorage(getSelectedDate());
+}
+
+function setSelectedDate(date) {
+    let selectedDate = document.querySelector(".selected-date");
+    selectedDate.innerHTML = getFormatedDate(date);
+}
+
+function getSelectedDate(date) {
+    let selectedDate = document.querySelector(".selected-date");
+    return selectedDate.innerHTML;
+}
+//refactor to make code easily understandable
+function getPreviousDate() {
+    let splitedSelectedDate = document
+        .querySelector(".selected-date")
+        .innerHTML.split("-");
+
+    //swap day and year to be able to parse
+    [splitedSelectedDate[0], splitedSelectedDate[2]] = [
+        splitedSelectedDate[2],
+        splitedSelectedDate[0],
+    ];
+
+    let selectedDate = new Date(Date.parse(splitedSelectedDate.join("-")));
+    selectedDate.setDate(selectedDate.getDate() - 1);
+
+    return selectedDate;
+}
+
+function getNextDate() {
+    let splitedSelectedDate = document
+        .querySelector(".selected-date")
+        .innerHTML.split("-");
+
+    //swap day and year to be able to parse
+    [splitedSelectedDate[0], splitedSelectedDate[2]] = [
+        splitedSelectedDate[2],
+        splitedSelectedDate[0],
+    ];
+
+    let selectedDate = new Date(Date.parse(splitedSelectedDate.join("-")));
+    selectedDate.setDate(selectedDate.getDate() + 1);
+
+    return selectedDate;
 }
 
 function getTextFromNote(innerHTMLCode) {
@@ -98,12 +155,13 @@ function getTextFromNote(innerHTMLCode) {
         .slice(startIndex, wholeText.toString().indexOf("\n", 1));
 }
 
-function postNotesFromLocalStorage() {
-    let notes = getNoteListForToday();
+function postNotesFromLocalStorage(date) {
+    let notes = getNoteListForDate(date);
+    let noteList = document.querySelector(".list-group");
+    noteList.innerHTML = "";
     if (notes !== null) {
-        //console.log(notes);
-        let noteList = document.querySelector(".list-group");
-
+        
+        
         notes.forEach((note) => {
             //console.log(note);
             let newNote = createNewNote(
@@ -117,7 +175,7 @@ function postNotesFromLocalStorage() {
 }
 //допилить,чтобы можно было менять текущую дату и соответсвенно список дел
 function getSelectedDate() {
-    return getTodayFormatedDate();
+    return document.querySelector(".selected-date").innerHTML;
 }
 //добавить listener, чтобы дата менялась в 00 00
 function getCurrentDayName() {
@@ -142,16 +200,16 @@ function getCurrentDayName() {
     }
 }
 
-function getTodayFormatedDate() {
-    var today = new Date();
+function getFormatedDate(date) {
+    var dateToFormat = date ?? new Date();
     return (
-        today.getDate() +
-        ":" +
-        ((today.getMonth() + 1).toString().length == 2
-            ? today.getMonth() + 1
-            : "0" + (today.getMonth() + 1)) +
-        ":" +
-        today.getFullYear()
+        dateToFormat.getDate() +
+        "-" +
+        ((dateToFormat.getMonth() + 1).toString().length == 2
+            ? dateToFormat.getMonth() + 1
+            : "0" + (dateToFormat.getMonth() + 1)) +
+        "-" +
+        dateToFormat.getFullYear()
     );
 }
 
@@ -213,17 +271,17 @@ function saveNoteToLocalStorage(text, date, creationTime, completed = false) {
     }
 }
 
-function setDateAndTime() {
+function displayTodayDate() {
     document.querySelector(".day-name").innerHTML = getCurrentDayName();
-    document.querySelector(".current-date").innerHTML = getTodayFormatedDate();
+    document.querySelector(".current-date").innerHTML = getFormatedDate();
 }
 
 function saveNoteList() {
     localStorage.setItem("test", 1);
 }
 //noteList:[{creationTime,text,tags},{},{}]
-function getNoteListForToday() {
-    return JSON.parse(localStorage.getItem(getTodayFormatedDate()));
+function getNoteListForDate(date) {
+    return JSON.parse(localStorage.getItem(date));
 }
 
 function noteExists(listOfNotes, creationTime) {
