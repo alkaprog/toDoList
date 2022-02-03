@@ -1,6 +1,6 @@
 //let SELECTED_DATE;
-
-function init() {
+let noteToEditID;
+function initNoteListEventListeners() {
     document
         .querySelector(".list-group")
         .addEventListener("mouseover", (event) => {
@@ -9,7 +9,7 @@ function init() {
                 event.target.firstElementChild.style.display = "inline-block";
             }
         });
-    //при перемещении курсора с кнопки на кнопку в другой заметке не работает  issamenode?
+
     document
         .querySelector(".list-group")
         .addEventListener("mouseout", (event) => {
@@ -26,7 +26,7 @@ function init() {
     document
         .querySelector(".list-group")
         .addEventListener("mouseout", (event) => {
-            console.log(event.target);
+            //console.log(event.target);
             if (
                 event.target.classList.contains("note-edit-buttons") &
                 !event.target.contains(
@@ -35,7 +35,6 @@ function init() {
                 (document.elementFromPoint(event.clientX, event.clientY) !==
                     event.target.parentElement)
             ) {
-                //console.log("yeah!");
                 event.target.style.display = "none";
             }
         });
@@ -43,7 +42,7 @@ function init() {
     document
         .querySelector(".list-group")
         .addEventListener("mouseout", (event) => {
-            console.log(event.target);
+            //console.log(event.target);
             if (
                 event.target.classList.contains("btn") &
                 (document.elementFromPoint(event.clientX, event.clientY) !==
@@ -51,7 +50,7 @@ function init() {
                 (document.elementFromPoint(event.clientX, event.clientY) !==
                     event.target.parentElement.parentElement)
             ) {
-                console.log("yeah!");
+                //console.log("yeah!");
                 event.target.parentElement.style.display = "none";
             }
         });
@@ -68,7 +67,7 @@ function init() {
                 notes.insertAdjacentHTML("beforeend", newNote);
                 saveNoteToLocalStorage(
                     inpuitField.value,
-                    getSelectedListName(),
+                    getSelectedNoteListName(),
                     creationTime
                 );
                 inpuitField.value = "";
@@ -79,9 +78,17 @@ function init() {
         .querySelector("#create-note-list")
         .addEventListener("click", (event) => {
             let inpuitField = document.querySelector(".create-note-list-input");
-            let notes = document.querySelector(".list-group");
             if (inpuitField.value != "") {
                 createNewNoteList(inpuitField.value);
+            }
+        });
+
+    document
+        .querySelector("#select-note-list")
+        .addEventListener("click", (event) => {
+            let inpuitField = document.querySelector(".select-note-list-input");
+            if ((inpuitField.value != "") & noteListExists(inpuitField.value)) {
+                postNotesFromLocalStorage(inpuitField.value);
             }
         });
 
@@ -89,7 +96,7 @@ function init() {
         if (event.target.classList.contains("delete-note-btn")) {
             try {
                 deleteNoteFromLocalStorage(
-                    getSelectedListName(),
+                    getSelectedNoteListName(),
                     event.target.parentElement.parentElement.id
                 );
             } catch (err) {
@@ -105,12 +112,12 @@ function init() {
             event.target.parentElement.parentElement.classList.toggle(
                 "list-group-item-success"
             );
-            console.log(event.target.parentElement.parentElement.text);
+            //console.log(event.target.parentElement.parentElement.text);
             saveNoteToLocalStorage(
                 getTextFromNote(
                     event.target.parentElement.parentElement.innerHTML
                 ),
-                getSelectedListName(),
+                getSelectedNoteListName(),
                 event.target.parentElement.parentElement.id,
                 event.target.parentElement.parentElement.classList.contains(
                     "list-group-item-success"
@@ -121,37 +128,67 @@ function init() {
         }
     });
 
+    document.querySelector(".list-group").addEventListener("click", (event) => {
+        if (event.target.classList.contains("edit-button")) {
+            noteToEditID = event.target.parentElement.parentElement.id;
+            document.querySelector(".edit-note-input").value = getTextFromNote(
+                event.target.parentElement.parentElement.innerHTML
+            );
+        }
+    });
+
+    //Модальное окно
+    document.querySelector("#edit-note").addEventListener("click", (event) => {
+        console.log("click");
+        let inpuitField = document.querySelector(".edit-note-input");
+        if (inpuitField.value != "") {
+            let noteList = JSON.parse(
+                localStorage.getItem(getSelectedNoteListName())
+            );
+            let note = noteList[indexOfNoteByCreationTime(noteToEditID)];
+            saveNoteToLocalStorage(
+                inpuitField.value,
+                getSelectedNoteListName(),
+                noteToEditID,
+                note.completed
+            );
+            postNotesFromLocalStorage(getSelectedNoteListName());
+        }
+    });
+
     document
         .querySelector(".previous-date")
         .addEventListener("click", (event) => {
-            setSelectedListName(getPreviousDate());
-            postNotesFromLocalStorage(getSelectedListName());
+            setSelectedNoteListName(getPreviousDate());
+            postNotesFromLocalStorage(getSelectedNoteListName());
         });
 
     document.querySelector(".next-date").addEventListener("click", (event) => {
-        setSelectedListName(getNextDate());
-        postNotesFromLocalStorage(getSelectedListName());
+        setSelectedNoteListName(getNextDate());
+        postNotesFromLocalStorage(getSelectedNoteListName());
     });
 
     displayTodayDate();
-    setSelectedListName(new Date());
-    postNotesFromLocalStorage(getSelectedListName());
+    setSelectedNoteListName(new Date());
+    postNotesFromLocalStorage(getSelectedNoteListName());
 }
 
 //Функции для работы с датами и временем
 
-function setSelectedListName(date) {
-    let selectedDate = document.querySelector(".selected-date");
-    selectedDate.innerHTML = formatDate(date);
+function setSelectedNoteListName(name) {
+    let selectedNoteListName = document.querySelector(
+        ".selected-note-list-name"
+    );
+    selectedNoteListName.innerHTML = formatDate(name);
 }
 
-function getSelectedListName() {
-    return document.querySelector(".selected-date").innerHTML;
+function getSelectedNoteListName() {
+    return document.querySelector(".selected-note-list-name").innerHTML;
 }
 
 function getPreviousDate() {
     let splitedSelectedDate = document
-        .querySelector(".selected-date")
+        .querySelector(".selected-note-list-name")
         .innerHTML.split("-");
 
     //swap day and year to be able to parse
@@ -168,7 +205,7 @@ function getPreviousDate() {
 
 function getNextDate() {
     let splitedSelectedDate = document
-        .querySelector(".selected-date")
+        .querySelector(".selected-note-list-name")
         .innerHTML.split("-");
 
     //swap day and year to be able to parse
@@ -277,7 +314,7 @@ function createNewNote(text, id, completed = false) {
                         >
                             Delete
                         </button>
-                        <button class="btn btn-outline-secondary" type="submit">
+                        <button class="btn btn-outline-secondary edit-button" type="submit" data-toggle="modal" data-target=".bd-example-modal-lg">
                             Edit
                         </button>
                         <button
@@ -308,7 +345,7 @@ function saveNoteToLocalStorage(
         //console.log(noteExists(listOfNodesForDate, newNote.creationTime));
 
         if (noteListContains(listOfNodesForDate, newNote.creationTime)) {
-            console.log("Note exists!!!");
+            //console.log("Note exists!!!");
             listOfNodesForDate = updateNote(
                 listOfNodesForDate,
                 indexOfNoteByCreationTime(
@@ -371,4 +408,4 @@ function createNewNoteList(name) {
     }
 }
 
-init();
+initNoteListEventListeners();
