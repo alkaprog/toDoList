@@ -1,3 +1,5 @@
+//let SELECTED_DATE;
+
 function init() {
     document
         .querySelector(".list-group")
@@ -22,6 +24,39 @@ function init() {
         });
 
     document
+        .querySelector(".list-group")
+        .addEventListener("mouseout", (event) => {
+            console.log(event.target);
+            if (
+                event.target.classList.contains("note-edit-buttons") &
+                !event.target.contains(
+                    document.elementFromPoint(event.clientX, event.clientY)
+                ) &
+                (document.elementFromPoint(event.clientX, event.clientY) !==
+                    event.target.parentElement)
+            ) {
+                //console.log("yeah!");
+                event.target.style.display = "none";
+            }
+        });
+
+    document
+        .querySelector(".list-group")
+        .addEventListener("mouseout", (event) => {
+            console.log(event.target);
+            if (
+                event.target.classList.contains("btn") &
+                (document.elementFromPoint(event.clientX, event.clientY) !==
+                    event.target.parentElement) &
+                (document.elementFromPoint(event.clientX, event.clientY) !==
+                    event.target.parentElement.parentElement)
+            ) {
+                console.log("yeah!");
+                event.target.parentElement.style.display = "none";
+            }
+        });
+
+    document
         .querySelector("#add-note-btn")
         .addEventListener("click", (event) => {
             let inpuitField = document.querySelector(".add-note-input");
@@ -33,10 +68,20 @@ function init() {
                 notes.insertAdjacentHTML("beforeend", newNote);
                 saveNoteToLocalStorage(
                     inpuitField.value,
-                    getSelectedDate(),
+                    getSelectedListName(),
                     creationTime
                 );
                 inpuitField.value = "";
+            }
+        });
+
+    document
+        .querySelector("#create-note-list")
+        .addEventListener("click", (event) => {
+            let inpuitField = document.querySelector(".create-note-list-input");
+            let notes = document.querySelector(".list-group");
+            if (inpuitField.value != "") {
+                createNewNoteList(inpuitField.value);
             }
         });
 
@@ -44,7 +89,7 @@ function init() {
         if (event.target.classList.contains("delete-note-btn")) {
             try {
                 deleteNoteFromLocalStorage(
-                    getSelectedDate(),
+                    getSelectedListName(),
                     event.target.parentElement.parentElement.id
                 );
             } catch (err) {
@@ -65,7 +110,7 @@ function init() {
                 getTextFromNote(
                     event.target.parentElement.parentElement.innerHTML
                 ),
-                getSelectedDate(),
+                getSelectedListName(),
                 event.target.parentElement.parentElement.id,
                 event.target.parentElement.parentElement.classList.contains(
                     "list-group-item-success"
@@ -79,30 +124,31 @@ function init() {
     document
         .querySelector(".previous-date")
         .addEventListener("click", (event) => {
-            setSelectedDate(getPreviousDate());
-            postNotesFromLocalStorage(getSelectedDate());
+            setSelectedListName(getPreviousDate());
+            postNotesFromLocalStorage(getSelectedListName());
         });
 
     document.querySelector(".next-date").addEventListener("click", (event) => {
-        setSelectedDate(getNextDate());
-        postNotesFromLocalStorage(getSelectedDate());
+        setSelectedListName(getNextDate());
+        postNotesFromLocalStorage(getSelectedListName());
     });
 
     displayTodayDate();
-    setSelectedDate(new Date());
-    postNotesFromLocalStorage(getSelectedDate());
+    setSelectedListName(new Date());
+    postNotesFromLocalStorage(getSelectedListName());
 }
 
-function setSelectedDate(date) {
+//Функции для работы с датами и временем
+
+function setSelectedListName(date) {
     let selectedDate = document.querySelector(".selected-date");
-    selectedDate.innerHTML = getFormatedDate(date);
+    selectedDate.innerHTML = formatDate(date);
 }
 
-function getSelectedDate(date) {
-    let selectedDate = document.querySelector(".selected-date");
-    return selectedDate.innerHTML;
+function getSelectedListName() {
+    return document.querySelector(".selected-date").innerHTML;
 }
-//refactor to make code easily understandable
+
 function getPreviousDate() {
     let splitedSelectedDate = document
         .querySelector(".selected-date")
@@ -137,47 +183,6 @@ function getNextDate() {
     return selectedDate;
 }
 
-function getTextFromNote(innerHTMLCode) {
-    let wholeText = innerHTMLCode.toString();
-    let startIndex;
-    for (let i = 0; i < wholeText.length; i++) {
-        if (
-            (wholeText[i] !== "\n") &
-            (wholeText[i] !== " ") &
-            (wholeText[i] !== "")
-        ) {
-            startIndex = i;
-            break;
-        }
-    }
-    return wholeText
-        .toString()
-        .slice(startIndex, wholeText.toString().indexOf("\n", 1));
-}
-
-function postNotesFromLocalStorage(date) {
-    let notes = getNoteListForDate(date);
-    let noteList = document.querySelector(".list-group");
-    noteList.innerHTML = "";
-    if (notes !== null) {
-        
-        
-        notes.forEach((note) => {
-            //console.log(note);
-            let newNote = createNewNote(
-                note.text,
-                note.creationTime,
-                note.completed
-            );
-            noteList.insertAdjacentHTML("beforeend", newNote);
-        });
-    }
-}
-//допилить,чтобы можно было менять текущую дату и соответсвенно список дел
-function getSelectedDate() {
-    return document.querySelector(".selected-date").innerHTML;
-}
-//добавить listener, чтобы дата менялась в 00 00
 function getCurrentDayName() {
     let day = new Date().getDay();
     switch (day) {
@@ -200,7 +205,7 @@ function getCurrentDayName() {
     }
 }
 
-function getFormatedDate(date) {
+function formatDate(date) {
     var dateToFormat = date ?? new Date();
     return (
         dateToFormat.getDate() +
@@ -211,6 +216,51 @@ function getFormatedDate(date) {
         "-" +
         dateToFormat.getFullYear()
     );
+}
+
+function displayTodayDate() {
+    document.querySelector(".day-name").innerHTML = getCurrentDayName();
+    document.querySelector(".current-date").innerHTML = formatDate();
+}
+
+//допилить,чтобы можно было менять текущую дату и соответсвенно список дел
+
+//добавить listener, чтобы дата менялась в 00 00
+
+//Работа с заметками и списками заметок
+
+function getTextFromNote(innerHTMLCode) {
+    let wholeText = innerHTMLCode.toString();
+    let startIndex;
+    for (let i = 0; i < wholeText.length; i++) {
+        if (
+            (wholeText[i] !== "\n") &
+            (wholeText[i] !== " ") &
+            (wholeText[i] !== "")
+        ) {
+            startIndex = i;
+            break;
+        }
+    }
+    return wholeText
+        .toString()
+        .slice(startIndex, wholeText.toString().indexOf("\n", 1));
+}
+
+function postNotesFromLocalStorage(noteListName) {
+    const notes = getNoteListByName(noteListName);
+    const noteList = document.querySelector(".list-group");
+    noteList.innerHTML = "";
+    if (notes !== null) {
+        notes.forEach((note) => {
+            let newNote = createNewNote(
+                note.text,
+                note.creationTime,
+                note.completed
+            );
+            noteList.insertAdjacentHTML("beforeend", newNote);
+        });
+    }
 }
 
 function createNewNote(text, id, completed = false) {
@@ -240,7 +290,12 @@ function createNewNote(text, id, completed = false) {
                 </li>`;
 }
 
-function saveNoteToLocalStorage(text, date, creationTime, completed = false) {
+function saveNoteToLocalStorage(
+    text,
+    noteListName,
+    creationTime,
+    completed = false
+) {
     creationTime = creationTime.toString();
     let newNote = {
         creationTime,
@@ -248,11 +303,11 @@ function saveNoteToLocalStorage(text, date, creationTime, completed = false) {
         completed,
     };
 
-    if (localStorage.hasOwnProperty(date)) {
-        let listOfNodesForDate = JSON.parse(localStorage.getItem(date));
+    if (noteListExists(noteListName)) {
+        let listOfNodesForDate = JSON.parse(localStorage.getItem(noteListName));
         //console.log(noteExists(listOfNodesForDate, newNote.creationTime));
 
-        if (noteExists(listOfNodesForDate, newNote.creationTime)) {
+        if (noteListContains(listOfNodesForDate, newNote.creationTime)) {
             console.log("Note exists!!!");
             listOfNodesForDate = updateNote(
                 listOfNodesForDate,
@@ -265,28 +320,23 @@ function saveNoteToLocalStorage(text, date, creationTime, completed = false) {
         } else {
             listOfNodesForDate.push(newNote);
         }
-        localStorage.setItem(date, JSON.stringify(listOfNodesForDate));
+        localStorage.setItem(noteListName, JSON.stringify(listOfNodesForDate));
     } else {
-        localStorage.setItem(date, JSON.stringify([newNote]));
+        localStorage.setItem(noteListName, JSON.stringify([newNote]));
     }
 }
 
-function displayTodayDate() {
-    document.querySelector(".day-name").innerHTML = getCurrentDayName();
-    document.querySelector(".current-date").innerHTML = getFormatedDate();
+function noteListExists(name) {
+    return localStorage.hasOwnProperty(name);
 }
 
-function saveNoteList() {
-    localStorage.setItem("test", 1);
-}
-//noteList:[{creationTime,text,tags},{},{}]
-function getNoteListForDate(date) {
-    return JSON.parse(localStorage.getItem(date));
+function getNoteListByName(name) {
+    return JSON.parse(localStorage.getItem(name));
 }
 
-function noteExists(listOfNotes, creationTime) {
-    for (let i = 0; i < listOfNotes.length; i++) {
-        if (listOfNotes[i].creationTime == creationTime) {
+function noteListContains(noteList, noteCreationTime) {
+    for (let i = 0; i < noteList.length; i++) {
+        if (noteList[i].creationTime == noteCreationTime) {
             return true;
         }
     }
@@ -302,10 +352,10 @@ function indexOfNoteByCreationTime(listOfNotes, creationTime) {
     return -1;
 }
 
-function deleteNoteFromLocalStorage(date, creationTime) {
-    let notes = JSON.parse(localStorage.getItem(date));
+function deleteNoteFromLocalStorage(noteListName, creationTime) {
+    let notes = JSON.parse(localStorage.getItem(noteListName));
     notes.splice(indexOfNoteByCreationTime(notes, creationTime), 1);
-    localStorage.setItem(date, JSON.stringify(notes));
+    localStorage.setItem(noteListName, JSON.stringify(notes));
 }
 
 function updateNote(listOfNotes, index, updatedNote) {
@@ -313,6 +363,12 @@ function updateNote(listOfNotes, index, updatedNote) {
     listOfNotes[index].text = updatedNote.text;
     listOfNotes[index].completed = updatedNote.completed;
     return listOfNotes;
+}
+
+function createNewNoteList(name) {
+    if (!noteListExists(name)) {
+        localStorage.setItem(name, JSON.stringify([]));
+    }
 }
 
 init();
