@@ -6,3 +6,7 @@
 .note-edit-buttons {
     display: none;
 }
+
+.list-group-item {
+    overflow: hidden;
+}

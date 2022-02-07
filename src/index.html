@@ -126,7 +126,7 @@
                 </div>
             </div>
             <div
-                class="modal fade bd-example-modal-lg"
+                class="modal fade edit-note-modal"
                 tabindex="-1"
                 role="dialog"
                 aria-labelledby="myLargeModalLabel"
@@ -147,6 +147,29 @@
                         >
                             Post
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-primary choose-note-list-button"
+                data-toggle="modal"
+                data-target=".choose-note-list-modal"
+            >
+                Large modal
+            </button>
+
+            <div
+                class="modal fade choose-note-list-modal"
+                tabindex="-1"
+                role="dialog"
+                aria-labelledby="myLargeModalLabel"
+                aria-hidden="true"
+            >
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="list-of-created-notes">List</div>
                     </div>
                 </div>
             </div>

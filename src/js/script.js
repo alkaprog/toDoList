@@ -1,5 +1,6 @@
 //let SELECTED_DATE;
 let noteToEditID;
+
 function initNoteListEventListeners() {
     document
         .querySelector(".list-group")
@@ -137,7 +138,7 @@ function initNoteListEventListeners() {
         }
     });
 
-    //Модальное окно
+    //Модальное окно для редактирования списка дел
     document.querySelector("#edit-note").addEventListener("click", (event) => {
         console.log("click");
         let inpuitField = document.querySelector(".edit-note-input");
@@ -155,6 +156,29 @@ function initNoteListEventListeners() {
             postNotesFromLocalStorage(getSelectedNoteListName());
         }
     });
+
+    //модаолка с выбором списка дел
+    document
+        .querySelector(".choose-note-list-button")
+        .addEventListener("click", (event) => {
+            let noteLists = [];
+            let noteListsNames = [];
+            let keys = Object.keys(localStorage);
+
+            let noteList = document.querySelector(".list-of-created-notes");
+            noteList.innerHTML = "";
+            for (let key of keys) {
+                noteListsNames.push(key);
+                noteLists.push(localStorage.getItem(key));
+                noteList.insertAdjacentHTML(
+                    "beforeend",
+                    `<div id="two">${key}</div>`
+                );
+            }
+
+            console.log(noteLists);
+            console.log(noteListsNames);
+        });
 
     document
         .querySelector(".previous-date")
@@ -174,17 +198,6 @@ function initNoteListEventListeners() {
 }
 
 //Функции для работы с датами и временем
-
-function setSelectedNoteListName(name) {
-    let selectedNoteListName = document.querySelector(
-        ".selected-note-list-name"
-    );
-    selectedNoteListName.innerHTML = formatDate(name);
-}
-
-function getSelectedNoteListName() {
-    return document.querySelector(".selected-note-list-name").innerHTML;
-}
 
 function getPreviousDate() {
     let splitedSelectedDate = document
@@ -244,8 +257,13 @@ function getCurrentDayName() {
 
 function formatDate(date) {
     var dateToFormat = date ?? new Date();
+    console.log(dateToFormat.getDate().toString());
+    console.log(dateToFormat);
+
     return (
-        dateToFormat.getDate() +
+        (dateToFormat.getDate().toString().length == 2
+            ? dateToFormat.getDate()
+            : "0" + dateToFormat.getDate()) +
         "-" +
         ((dateToFormat.getMonth() + 1).toString().length == 2
             ? dateToFormat.getMonth() + 1
@@ -256,6 +274,7 @@ function formatDate(date) {
 }
 
 function displayTodayDate() {
+    console.log(123);
     document.querySelector(".day-name").innerHTML = getCurrentDayName();
     document.querySelector(".current-date").innerHTML = formatDate();
 }
@@ -265,6 +284,17 @@ function displayTodayDate() {
 //добавить listener, чтобы дата менялась в 00 00
 
 //Работа с заметками и списками заметок
+
+function setSelectedNoteListName(name) {
+    let selectedNoteListName = document.querySelector(
+        ".selected-note-list-name"
+    );
+    selectedNoteListName.innerHTML = formatDate(name);
+}
+
+function getSelectedNoteListName() {
+    return document.querySelector(".selected-note-list-name").innerHTML;
+}
 
 function getTextFromNote(innerHTMLCode) {
     let wholeText = innerHTMLCode.toString();
@@ -314,7 +344,7 @@ function createNewNote(text, id, completed = false) {
                         >
                             Delete
                         </button>
-                        <button class="btn btn-outline-secondary edit-button" type="submit" data-toggle="modal" data-target=".bd-example-modal-lg">
+                        <button class="btn btn-outline-secondary edit-button" type="submit" data-toggle="modal" data-target=".edit-note-modal">
                             Edit
                         </button>
                         <button
@@ -406,6 +436,10 @@ function createNewNoteList(name) {
     if (!noteListExists(name)) {
         localStorage.setItem(name, JSON.stringify([]));
     }
+}
+
+function stringIsDate(str) {
+    return /^-?\d+$/.test(str);
 }
 
 initNoteListEventListeners();
