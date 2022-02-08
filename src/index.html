@@ -29,7 +29,8 @@
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"
         ></script>
-        <script defer src="js/script.js"></script>
+
+        <script defer type="module" src="js/script.js"></script>
     </head>
     <body>
         <header>
@@ -169,7 +170,18 @@
             >
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
-                        <div class="list-of-created-notes">List</div>
+                        <div class="card" style="width: 18rem">
+                            <div class="card-header">Daily lists</div>
+                            <ul
+                                class="list-group list-group-flush list-of-daily-notes"
+                            ></ul>
+                        </div>
+                        <div class="card" style="width: 18rem">
+                            <div class="card-header">Custom lists</div>
+                            <ul
+                                class="list-group list-group-flush list-of-custom-notes"
+                            ></ul>
+                        </div>
                     </div>
                 </div>
             </div>

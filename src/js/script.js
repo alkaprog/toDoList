@@ -1,5 +1,15 @@
+import {
+    getPreviousDate,
+    getNextDate,
+    getDayName,
+    writeFormatedDateToElement,
+    writeDayNameToElement,
+    formatDate
+} from "./dateFunctions.js";
+
 //let SELECTED_DATE;
 let noteToEditID;
+let selectedDate = new Date();
 
 function initNoteListEventListeners() {
     document
@@ -163,120 +173,50 @@ function initNoteListEventListeners() {
         .addEventListener("click", (event) => {
             let noteLists = [];
             let noteListsNames = [];
-            let keys = Object.keys(localStorage);
 
-            let noteList = document.querySelector(".list-of-created-notes");
-            noteList.innerHTML = "";
-            for (let key of keys) {
+            let dailyNoteLists = document.querySelector(".list-of-daily-notes");
+            dailyNoteLists.innerHTML = ``;
+
+            let customNoteLists = document.querySelector(
+                ".list-of-custom-notes"
+            );
+            customNoteLists.innerHTML = ``;
+
+            for (let key of Object.keys(localStorage)) {
                 noteListsNames.push(key);
                 noteLists.push(localStorage.getItem(key));
-                noteList.insertAdjacentHTML(
+
+                dailyNoteLists.insertAdjacentHTML(
                     "beforeend",
-                    `<div id="two">${key}</div>`
+                    `<li class="list-group-item">${key}</li>`
+                );
+
+                customNoteLists.insertAdjacentHTML(
+                    "beforeend",
+                    `<li class="list-group-item">${key}</li>`
                 );
             }
-
-            console.log(noteLists);
-            console.log(noteListsNames);
         });
 
     document
         .querySelector(".previous-date")
         .addEventListener("click", (event) => {
-            setSelectedNoteListName(getPreviousDate());
+            setSelectedNoteListName(getPreviousDate(selectedDate));
+            selectedDate = getPreviousDate(selectedDate);
             postNotesFromLocalStorage(getSelectedNoteListName());
         });
 
     document.querySelector(".next-date").addEventListener("click", (event) => {
-        setSelectedNoteListName(getNextDate());
+        setSelectedNoteListName(getNextDate(selectedDate));
+        selectedDate = getNextDate(selectedDate);
         postNotesFromLocalStorage(getSelectedNoteListName());
     });
 
-    displayTodayDate();
+    writeFormatedDateToElement(".current-date", new Date());
+    writeDayNameToElement(".day-name", new Date());
+    //displayTodayDate();
     setSelectedNoteListName(new Date());
     postNotesFromLocalStorage(getSelectedNoteListName());
-}
-
-//Функции для работы с датами и временем
-
-function getPreviousDate() {
-    let splitedSelectedDate = document
-        .querySelector(".selected-note-list-name")
-        .innerHTML.split("-");
-
-    //swap day and year to be able to parse
-    [splitedSelectedDate[0], splitedSelectedDate[2]] = [
-        splitedSelectedDate[2],
-        splitedSelectedDate[0],
-    ];
-
-    let selectedDate = new Date(Date.parse(splitedSelectedDate.join("-")));
-    selectedDate.setDate(selectedDate.getDate() - 1);
-
-    return selectedDate;
-}
-
-function getNextDate() {
-    let splitedSelectedDate = document
-        .querySelector(".selected-note-list-name")
-        .innerHTML.split("-");
-
-    //swap day and year to be able to parse
-    [splitedSelectedDate[0], splitedSelectedDate[2]] = [
-        splitedSelectedDate[2],
-        splitedSelectedDate[0],
-    ];
-
-    let selectedDate = new Date(Date.parse(splitedSelectedDate.join("-")));
-    selectedDate.setDate(selectedDate.getDate() + 1);
-
-    return selectedDate;
-}
-
-function getCurrentDayName() {
-    let day = new Date().getDay();
-    switch (day) {
-        case 0:
-            return "Sunday";
-        case 1:
-            return "Monday";
-        case 2:
-            return "Tuesday";
-        case 3:
-            return "Wednesday";
-        case 4:
-            return "Thursday";
-        case 5:
-            return "Friday";
-        case 6:
-            return "Saturday";
-        default:
-            return "Error";
-    }
-}
-
-function formatDate(date) {
-    var dateToFormat = date ?? new Date();
-    console.log(dateToFormat.getDate().toString());
-    console.log(dateToFormat);
-
-    return (
-        (dateToFormat.getDate().toString().length == 2
-            ? dateToFormat.getDate()
-            : "0" + dateToFormat.getDate()) +
-        "-" +
-        ((dateToFormat.getMonth() + 1).toString().length == 2
-            ? dateToFormat.getMonth() + 1
-            : "0" + (dateToFormat.getMonth() + 1)) +
-        "-" +
-        dateToFormat.getFullYear()
-    );
-}
-
-function displayTodayDate() {
-    console.log(123);
-    document.querySelector(".day-name").innerHTML = getCurrentDayName();
-    document.querySelector(".current-date").innerHTML = formatDate();
 }
 
 //допилить,чтобы можно было менять текущую дату и соответсвенно список дел
@@ -289,7 +229,11 @@ function setSelectedNoteListName(name) {
     let selectedNoteListName = document.querySelector(
         ".selected-note-list-name"
     );
-    selectedNoteListName.innerHTML = formatDate(name);
+    if (stringIsDate(name)) {
+        selectedNoteListName.innerHTML = formatDate(name);
+    } else {
+        selectedNoteListName.innerHTML = name;
+    }
 }
 
 function getSelectedNoteListName() {
@@ -439,7 +383,8 @@ function createNewNoteList(name) {
 }
 
 function stringIsDate(str) {
-    return /^-?\d+$/.test(str);
+    return true;
 }
 
 initNoteListEventListeners();
+//console.log(myFunc(new Date()));
