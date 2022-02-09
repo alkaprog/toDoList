@@ -5,11 +5,12 @@ import {
     writeDayNameToElement,
     formatDate,
     stringIsDate,
+    parseDate,
 } from "./dateFunctions.js";
 
 import {
     postNoteList,
-    createNewNote,
+    createNote,
     saveNote,
     noteListExists,
     indexOfNoteByCreationTime,
@@ -20,6 +21,7 @@ import {
 
 let noteToEditID;
 let selectedDate = new Date();
+let displayedNoteListName;
 
 function initNoteListEventListeners() {
     document
@@ -76,7 +78,7 @@ function initNoteListEventListeners() {
         if (event.target.classList.contains("delete-note-btn")) {
             try {
                 deleteNote(
-                    getSelectedNoteListName(".selected-note-list-name"),
+                    getSelectedNoteListName(),
                     event.target.parentElement.parentElement.id
                 );
             } catch (err) {
@@ -94,7 +96,7 @@ function initNoteListEventListeners() {
             );
             saveNote(
                 getTextFromNote(event.target.parentElement.parentElement.id),
-                getSelectedNoteListName(".selected-note-list-name"),
+                getSelectedNoteListName(),
                 event.target.parentElement.parentElement.id,
                 event.target.parentElement.parentElement.classList.contains(
                     "list-group-item-success"
@@ -115,60 +117,50 @@ function initNoteListEventListeners() {
     });
 
     //Модальное окно для редактирования списка дел
-    document.querySelector("#edit-note").addEventListener("click", (event) => {
-        console.log("click");
-        let inpuitField = document.querySelector(".edit-note-input");
-        if (inpuitField.value != "") {
-            let noteList = JSON.parse(
-                localStorage.getItem(
-                    getSelectedNoteListName(".selected-note-list-name")
-                )
-            );
-            let note = noteList[indexOfNoteByCreationTime(noteToEditID)];
-            saveNote(
-                inpuitField.value,
-                getSelectedNoteListName(".selected-note-list-name"),
-                noteToEditID,
-                note.completed
-            );
-            postNoteList(
-                ".list-group",
-                getSelectedNoteListName(".selected-note-list-name")
-            );
-        }
-    });
-
     document
-        .querySelector(".previous-date")
+        .querySelector("#save-edited-note")
         .addEventListener("click", (event) => {
-            writeNoteListNameToElement(
-                ".selected-note-list-name",
-                getPreviousDate(selectedDate)
-            );
-            selectedDate = getPreviousDate(selectedDate);
-            postNoteList(
-                ".list-group",
-                getSelectedNoteListName(".selected-note-list-name")
-            );
+            let inpuitField = document.querySelector(".edit-note-input");
+            if (inpuitField.value != "") {
+                let noteList = JSON.parse(
+                    localStorage.getItem(getSelectedNoteListName())
+                );
+                let note = noteList[indexOfNoteByCreationTime(noteToEditID)];
+                saveNote(
+                    inpuitField.value,
+                    getSelectedNoteListName(),
+                    noteToEditID,
+                    note.completed
+                );
+                postNoteList(".list-group", getSelectedNoteListName());
+            }
         });
 
-    document.querySelector(".next-date").addEventListener("click", (event) => {
+    document.querySelector(".previous-date").addEventListener("click", () => {
         writeNoteListNameToElement(
             ".selected-note-list-name",
-            getNextDate(selectedDate)
+            formatDate(getPreviousDate(selectedDate))
         );
-        selectedDate = getNextDate(selectedDate);
-        postNoteList(
-            ".list-group",
-            getSelectedNoteListName(".selected-note-list-name")
-        );
+        selectedDate = getPreviousDate(selectedDate);
+        displayedNoteListName = formatDate(selectedDate);
+        postNoteList(".list-group", getSelectedNoteListName());
     });
 
-    writeNoteListNameToElement(".selected-note-list-name", new Date());
-    postNoteList(
-        ".list-group",
-        getSelectedNoteListName(".selected-note-list-name")
+    document.querySelector(".next-date").addEventListener("click", () => {
+        writeNoteListNameToElement(
+            ".selected-note-list-name",
+            formatDate(getNextDate(selectedDate))
+        );
+        selectedDate = getNextDate(selectedDate);
+        displayedNoteListName = formatDate(selectedDate);
+        postNoteList(".list-group", getSelectedNoteListName());
+    });
+
+    writeNoteListNameToElement(
+        ".selected-note-list-name",
+        formatDate(new Date())
     );
+    postNoteList(".list-group", getSelectedNoteListName());
 }
 
 function initControlBlockListeners() {
@@ -210,12 +202,12 @@ function initControlBlockListeners() {
             let notes = document.querySelector(".list-group");
             if (inpuitField.value != "") {
                 let creationTime = new Date().valueOf();
-                let newNote = createNewNote(inpuitField.value, creationTime);
+                let newNote = createNote(inpuitField.value, creationTime);
 
                 notes.insertAdjacentHTML("beforeend", newNote);
                 saveNote(
                     inpuitField.value,
-                    getSelectedNoteListName(".selected-note-list-name"),
+                    getSelectedNoteListName(),
                     creationTime
                 );
                 inpuitField.value = "";
@@ -233,10 +225,29 @@ function initControlBlockListeners() {
 
     document
         .querySelector("#select-note-list")
-        .addEventListener("click", (event) => {
+        .addEventListener("click", () => {
             let inpuitField = document.querySelector(".select-note-list-input");
-            if ((inpuitField.value != "") & noteListExists(inpuitField.value)) {
-                postNoteList(".list-group", inpuitField.value);
+            let noteListName = inpuitField.value;
+            if ((noteListName != "") & noteListExists(noteListName)) {
+                postNoteList(".list-group", noteListName);
+                displayedNoteListName = noteListName;
+                writeNoteListNameToElement(
+                    ".selected-note-list-name",
+                    noteListName
+                );
+                let buttons = document.querySelectorAll(
+                    ".current-data-swap-button"
+                );
+                if (stringIsDate(noteListName)) {
+                    selectedDate = parseDate(noteListName);
+                    buttons.forEach((btn) => {
+                        btn.classList.remove("d-none");
+                    });
+                } else {
+                    buttons.forEach((btn) => {
+                        btn.classList.add("d-none");
+                    });
+                }
             }
         });
 }
@@ -249,16 +260,20 @@ function initTimeDisplay() {
 function writeNoteListNameToElement(selector, name) {
     let selectedNoteListName = document.querySelector(selector);
     if (stringIsDate(name)) {
-        selectedNoteListName.innerHTML = formatDate(name);
+        selectedNoteListName.innerHTML = name;
+        displayedNoteListName = name;
     } else {
         selectedNoteListName.innerHTML = name;
+        displayedNoteListName = name;
     }
 }
 
-function getSelectedNoteListName(selector) {
-    return document.querySelector(selector).innerHTML;
+function getSelectedNoteListName() {
+    return displayedNoteListName;
 }
 
 initTimeDisplay();
 initNoteListEventListeners();
 initControlBlockListeners();
+
+//console.log(parseDate("09-02-2022"));

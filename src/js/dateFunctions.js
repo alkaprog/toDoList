@@ -62,8 +62,6 @@ function parseDate(stringDate) {
     ];
 
     let selectedDate = new Date(Date.parse(splitedStringDate.join("-")));
-    selectedDate.setDate(selectedDate.getDate() + 1);
-
     return selectedDate;
 }
 
@@ -87,7 +85,23 @@ function writeDayNameToElement(selector, date = new Date()) {
 }
 
 function stringIsDate(str) {
-    return true;
+    const digits = "0123456789";
+    if (
+        (str.length == 10) &
+        digits.includes(str[0]) &
+        digits.includes(str[1]) &
+        (str[2] == "-") &
+        digits.includes(str[3]) &
+        digits.includes(str[4]) &
+        (str[5] == "-") &
+        digits.includes(str[6]) &
+        digits.includes(str[7]) &
+        digits.includes(str[8]) &
+        digits.includes(str[9])
+    ) {
+        return true;
+    }
+    return false;
 }
 
 export {
@@ -98,5 +112,5 @@ export {
     parseDate,
     writeFormatedDateToElement,
     writeDayNameToElement,
-    stringIsDate
+    stringIsDate,
 };
