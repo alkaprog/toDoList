@@ -86,6 +86,10 @@ function writeDayNameToElement(selector, date = new Date()) {
     document.querySelector(selector).innerHTML = getDayName(date);
 }
 
+function stringIsDate(str) {
+    return true;
+}
+
 export {
     getPreviousDate,
     getNextDate,
@@ -94,4 +98,5 @@ export {
     parseDate,
     writeFormatedDateToElement,
     writeDayNameToElement,
+    stringIsDate
 };
