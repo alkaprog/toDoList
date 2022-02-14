@@ -17,6 +17,7 @@ import {
     deleteNote,
     createNewNoteList,
     getTextFromNote,
+    swapNotesOrder,
 } from "./noteListFunctions.js";
 
 let noteToEditID;
@@ -257,6 +258,43 @@ function initTimeDisplay() {
     writeDayNameToElement(".day-name", new Date());
 }
 
+function initDragNDrop() {
+    let noteList = document.querySelector(".list-group");
+
+    noteList.ondragover = allowDrop;
+    noteList.ondragstart = drag;
+    noteList.ondrop = drop;
+
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+    //допилить, чтобы элемент отображался так же как и бало изначально
+    function drag(event) {
+        const element = document.elementFromPoint(event.clientX, event.clientY);
+        if (element instanceof HTMLLIElement) {
+            event.dataTransfer.setData("id", element.id);
+            event.dataTransfer.setDragImage(element, 0, 0);
+        }
+    }
+
+    function drop(event) {
+        let startElementID = event.dataTransfer.getData("id");
+        if (startElementID !== "") {
+            const finishElement = document.elementFromPoint(
+                event.clientX,
+                event.clientY
+            );
+            if (finishElement instanceof HTMLLIElement) {
+                swapElements(
+                    document.getElementById(finishElement.id),
+                    document.getElementById(startElementID)
+                );
+            }
+            console.log(event.target);
+        }
+    }
+}
+
 function writeNoteListNameToElement(selector, name) {
     let selectedNoteListName = document.querySelector(selector);
     if (stringIsDate(name)) {
@@ -268,12 +306,52 @@ function writeNoteListNameToElement(selector, name) {
     }
 }
 
+function swapElements(element1, element2) {
+    var parentElement1 = element1.parentNode;
+    var parentElement2 = element2.parentNode;
+    var indexOfElement1, indexOfElement2;
+
+    if (
+        !parentElement1 ||
+        !parentElement2 ||
+        parentElement1.isEqualNode(element2) ||
+        parentElement2.isEqualNode(element1)
+    )
+        return;
+
+    for (var i = 0; i < parentElement1.children.length; i++) {
+        if (parentElement1.children[i].isEqualNode(element1)) {
+            indexOfElement1 = i;
+        }
+    }
+    for (var i = 0; i < parentElement2.children.length; i++) {
+        if (parentElement2.children[i].isEqualNode(element2)) {
+            indexOfElement2 = i;
+        }
+    }
+
+    if (
+        parentElement1.isEqualNode(parentElement2) &&
+        indexOfElement1 < indexOfElement2
+    ) {
+        indexOfElement2++;
+    }
+    parentElement1.insertBefore(
+        element2,
+        parentElement1.children[indexOfElement1]
+    );
+    parentElement2.insertBefore(
+        element1,
+        parentElement2.children[indexOfElement2]
+    );
+    swapNotesOrder(element1.id, element2.id);
+}
+
 function getSelectedNoteListName() {
     return displayedNoteListName;
 }
 
+initDragNDrop();
 initTimeDisplay();
 initNoteListEventListeners();
 initControlBlockListeners();
-
-//console.log(parseDate("09-02-2022"));

@@ -24,8 +24,15 @@ function deleteNote(noteListName, creationTime) {
     }
 }
 
-function updateNote(noteList, updatedNote) {
-    let index = indexOfNoteByCreationTime(noteList, updatedNote.creationTime);
+function updateNote(
+    noteList,
+    idOfNoteToUpdate,
+    updatedNote,
+    indexOfNoteUpdateInList
+) {
+    let index =
+        indexOfNoteUpdateInList ??
+        indexOfNoteByCreationTime(noteList, idOfNoteToUpdate);
     noteList[index].creationTime = updatedNote.creationTime;
     noteList[index].text = updatedNote.text;
     noteList[index].completed = updatedNote.completed;
@@ -54,7 +61,7 @@ function saveNote(text, noteListName, creationTime, completed = false) {
 
         if (noteListContains(noteList, newNote.creationTime)) {
             //console.log("Note exists!!!");
-            noteList = updateNote(noteList, newNote);
+            noteList = updateNote(noteList, creationTime, newNote);
         } else {
             noteList.push(newNote);
         }
@@ -62,6 +69,11 @@ function saveNote(text, noteListName, creationTime, completed = false) {
     } else {
         localStorage.setItem(noteListName, JSON.stringify([newNote]));
     }
+}
+
+function saveNoteList(noteListName, noteList) {
+    console.log("dsafsdf");
+    localStorage.setItem(noteListName, JSON.stringify(noteList));
 }
 
 function indexOfNoteByCreationTime(listOfNotes, creationTime) {
@@ -83,6 +95,21 @@ function getTextFromNote(id) {
         }
     }
     return "";
+}
+
+function getNoteById(id) {
+    for (let key of Object.keys(localStorage)) {
+        let noteList = getNoteListByName(key);
+        if (noteListContains(noteList, id)) {
+            let noteIndex = indexOfNoteByCreationTime(noteList, id);
+            return {
+                creationTime: id,
+                text: noteList[noteIndex].text,
+                completed: noteList[noteIndex].completed,
+            };
+        }
+    }
+    return {};
 }
 
 function createNewNoteList(name) {
@@ -113,7 +140,9 @@ function noteListExists(name) {
 }
 
 function getNoteListByName(name) {
-    return JSON.parse(localStorage.getItem(name));
+    if (noteListExists(name)) {
+        return JSON.parse(localStorage.getItem(name));
+    }
 }
 
 function noteListContains(noteList, noteCreationTime) {
@@ -125,13 +154,34 @@ function noteListContains(noteList, noteCreationTime) {
     return false;
 }
 
+function swapNotesOrder(idOfNote1, idOfNote2) {
+    for (let key of Object.keys(localStorage)) {
+        let noteList = getNoteListByName(key);
+        if (
+            (noteListContains(noteList, idOfNote1),
+            noteListContains(noteList, idOfNote2))
+        ) {
+            const note1 = getNoteById(idOfNote1);
+            const note1Index = indexOfNoteByCreationTime(noteList, idOfNote1);
+            const note2Index = indexOfNoteByCreationTime(noteList, idOfNote2);
+
+            console.log(noteList);
+            updateNote(noteList, idOfNote1, getNoteById(idOfNote2), note1Index);
+            updateNote(noteList, idOfNote2, note1, note2Index);
+            console.log(noteList);
+            saveNoteList(key, noteList);
+        }
+    }
+}
+
 export {
     postNoteList,
-    createNote, 
+    createNote,
     saveNote,
     noteListExists,
     indexOfNoteByCreationTime,
     deleteNote,
     createNewNoteList,
     getTextFromNote,
+    swapNotesOrder,
 };
